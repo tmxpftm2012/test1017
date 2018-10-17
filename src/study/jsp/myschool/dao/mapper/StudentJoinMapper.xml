@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 이 파일의 경로를 config.xml에 명시해야 한다. -->
+
+<!-- 이 XML의 구조대로 구현될 클래스의 이름 -->
+<mapper namespace="StudentJoinMapper">
+
+	<!-- Beans 클래스의 객체이름(id)과 클래스이름(type)을 명시한다. -->
+	<resultMap id="student_professor_department" type="study.jsp.myschool.model.StudentProfessorDepartment">
+		<!-- Beans의 멤버변수(property)이름과 대상 테이블의 컬럼(column)을 연결한다. -->
+		<result property="studno" 	column="studno" />
+		<result property="name" 	column="student.name" />
+		<result property="userid" 	column="student.userid" />
+		<result property="grade" column="grade" />
+		<result property="idnum" 	column="idnum" />
+		<result property="birthdate" column="birthdate" />
+		<result property="tel" 	column="tel" />
+		<result property="height" 	column="height" />
+		<result property="weight" 	column="weight" />
+		<result property="deptno" 	column="deptno" />
+		<result property="profno" 	column="profno" />
+		<result property="dname" 	column="dname" />
+		<result property="pname" 	column="professor.name" />
+	</resultMap>
+
+	<!-- 교수+학과 테이블을 조인하여 목록조회 -->
+	<select id="selectStudentJoinList" 
+		parameterType="study.jsp.myschool.model.StudentProfessorDepartment"
+	 	resultMap="student_professor_department">
+		SELECT  studno, student.name, student.userid, grade, idnum, 
+			    DATE_FORMAT(birthdate, '%Y-%m-%d') AS birthdate, 
+			    tel, height, weight, deptno, profno,
+			    professor.name as pname, department.dname as dname
+			  FROM student INNER JOIN professor ON student.profno=professor.profno
+			  			   INNER JOIN department ON student.deptno=department.deptno
+		
+		<where>
+			<if test="name != null and name != ''">
+				student.name LIKE concat('%', #{name}, '%')
+			</if>
+		</where>
+		
+		ORDER   BY profno DESC
+		LIMIT #{limitStart}, #{listCount}
+	</select>
+	
+	<!-- 교수+학과 테이블을 조인하여 상세조회 -->
+	<select id="selectStudentJoinItem" 
+		parameterType="study.jsp.myschool.model.StudentProfessorDepartment"
+		resultMap="student_professor_department">
+		SELECT  studno, student.name as name, student.userid as userid, grade, idnum, 
+			    DATE_FORMAT(birthdate, '%Y-%m-%d') AS birthdate, 
+			     tel, height, weight, deptno, profno,
+			    professor.name as pname, department.dname as dname
+			  FROM student INNER JOIN professor ON student.profno=professor.profno
+			  			   INNER JOIN department ON student.deptno=department.deptno
+			WHERE   studno=#{studno}
+	</select>
+	
+	<!-- 조인 결과에 대한 전체 데이터 수 얻기 -->
+	<select id="selectStudentCount"
+		parameterType="study.jsp.myschool.model.StudentProfessorDepartment"
+		resultType="int">
+		SELECT count(studno)
+		FROM student INNER JOIN professor ON student.profno=profosser.profno
+					 INNER JOIN department ON student.deptno=department.deptno
+		<where>
+			<if test="dname != null and dname != ''">
+				name LIKE concat('%', #{name}, '%')
+			</if>
+		</where>
+	</select>
+</mapper>
+
+
